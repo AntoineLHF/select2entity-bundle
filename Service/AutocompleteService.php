@@ -4,6 +4,7 @@ namespace Tetranz\Select2EntityBundle\Service;
 
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,8 +26,7 @@ class AutocompleteService
      * @param FormFactoryInterface $formFactory
      * @param ManagerRegistry      $doctrine
      */
-    public function __construct(FormFactoryInterface $formFactory, ManagerRegistry $doctrine)
-    {
+    public function __construct(FormFactoryInterface $formFactory, ManagerRegistry $doctrine){
         $this->formFactory = $formFactory;
         $this->doctrine = $doctrine;
     }   
@@ -37,8 +37,7 @@ class AutocompleteService
      *
      * @return array
      */
-    public function getAutocompleteResults(Request $request, $type)
-    {
+    public function getAutocompleteResults(Request $request, $type){
         $form = $this->formFactory->create($type);
         $fieldOptions = $form->get($request->get('field_name'))->getConfig()->getOptions();
 
@@ -47,20 +46,18 @@ class AutocompleteService
 
         $term = $request->get('q');
 
+        $query_builder_fields = $fieldOptions['query_builder_fields'];
+
         $countQB = $repo->createQueryBuilder('e');
-        $countQB
-            ->select($countQB->expr()->count('e'))
-            ->where('e.'.$fieldOptions['property'].' LIKE :term')
-            ->setParameter('term', '%' . $term . '%')
-        ;
+        $countQB->select($countQB->expr()->count('e'));
+        $countQB = $this->addWhereConditions($countQB, $query_builder_fields, $term);
 
         $maxResults = $fieldOptions['page_limit'];
         $offset = ($request->get('page', 1) - 1) * $maxResults;
 
         $resultQb = $repo->createQueryBuilder('e');
+        $resultQb = $this->addWhereConditions($resultQb, $query_builder_fields, $term);
         $resultQb
-            ->where('e.'.$fieldOptions['property'].' LIKE :term')
-            ->setParameter('term', '%' . $term . '%')
             ->setMaxResults($maxResults)
             ->setFirstResult($offset)
         ;
@@ -84,5 +81,14 @@ class AutocompleteService
         }, $paginationResults);
 
         return $result;
+    }
+
+    public function addWhereConditions(QueryBuilder $qb, $query_builder_fields, $term){
+        foreach ($query_builder_fields as $field){
+            $qb->orWhere('e.'.$field.' LIKE :term'.$field)
+                ->setParameter('term'.$field,$term . '%');
+        }
+
+        return $qb;
     }
 }

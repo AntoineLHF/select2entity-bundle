@@ -68,7 +68,7 @@ twig:
 ```
 * Load the Javascript on the page. The simplest way is to add the following to your layout file. Don't forget to run console assets:install. Alternatively, do something more sophisticated with Assetic.
 ```
-<script src="{{ asset('bundles/tetranzselect2entity/js/select2entity.js') }}"></script>
+<script src="{{ asset('bundles/tetranzselect2entity/js/entity.js') }}"></script>
 ```
 
 ## How to use
@@ -105,10 +105,11 @@ use Tetranz\Select2EntityBundle\Form\Type\Select2EntityType;
 
 ## Options
 Defaults will be used for some if not set.
-* `class` is your entity class. Required
+* `class` is your entity class. Required.
 * `primary_key` is the name of the property used to uniquely identify entities. Defaults to 'id'
-* `text_property` This is the entity property used to retrieve the text for existing data. 
-If text_property is omitted then the entity is cast to a string. This requires it to have a __toString() method.
+* `query_builder_fields` is the list of fields on which autocomplete search is done.
+* `property` This is the entity property used to retrieve the text to display for existing data. 
+If property is omitted then the entity is cast to a string. This requires it to have a __toString() method.
 * `multiple` True for multiple select (many to many). False for single (many to one) select.
 * `minimum_input_length` is the number of keys you need to hit before the search will happen. Defaults to 2.
 * `page_limit` This is passed as a query parameter to the remote call. It is intended to be used to limit size of the list returned. Defaults to 10.
@@ -131,6 +132,9 @@ If text_property is omitted then the entity is cast to a string. This requires i
 The url of the remote query can be given by either of two ways: `remote_route` is the Symfony route. 
 `remote_params` can be optionally specified to provide parameters. Alternatively, `remote_path` can be used to specify 
 the url directly.
+
+If you use 'ajax_autocomplete' route as the 'remote_route', Please specify the formTypeClass in 'remote_params' (Ex : remote_params => array('formTypeClass' => AddressType::class) ),
+
 
 The defaults can be changed in your app/config.yml file with the following format.
 
